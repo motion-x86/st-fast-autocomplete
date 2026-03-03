@@ -35,7 +35,7 @@ PACKAGE_NAME = "st_fast_autocomplete"
 
 # Files and directories included in the package (relative to repo root)
 INCLUDE: list[str] = [
-    ".python-version",
+    "sublime-package.json",
     "fast_autocomplete.py",
     "fast_autocomplete.sublime-settings",
     "Default.sublime-keymap",

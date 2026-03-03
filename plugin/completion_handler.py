@@ -162,19 +162,19 @@ def _make_full_task(
         try:
             text = provider.complete(context, max_tokens, alternate)
         except AuthError as exc:
-            _ui(lambda: sublime.error_message(
-                f"[fast_autocomplete] Authentication failed:\n{exc}\n\n"
+            _ui(lambda e=exc: sublime.error_message(
+                f"[fast_autocomplete] Authentication failed:\n{e}\n\n"
                 "Update your API key via Tools > st-fast-autocomplete > Set API Key."
             ))
             return
         except RateLimitError as exc:
-            _ui(lambda: sublime.status_message(f"[fast_autocomplete] Rate limit: {exc}"))
+            _ui(lambda e=exc: sublime.status_message(f"[fast_autocomplete] Rate limit: {e}"))
             return
         except ProviderTimeoutError:
             _ui(lambda: sublime.status_message("[fast_autocomplete] Request timed out."))
             return
         except ProviderError as exc:
-            _ui(lambda: sublime.status_message(f"[fast_autocomplete] Error: {exc}"))
+            _ui(lambda e=exc: sublime.status_message(f"[fast_autocomplete] Error: {e}"))
             return
 
         if token.is_cancelled or not text:
@@ -210,16 +210,16 @@ def _make_stream_task(
                 _ui(lambda s=_snapshot: _show_ghost_text(view, s))
 
         except AuthError as exc:
-            _ui(lambda: sublime.error_message(
-                f"[fast_autocomplete] Authentication failed:\n{exc}\n\n"
+            _ui(lambda e=exc: sublime.error_message(
+                f"[fast_autocomplete] Authentication failed:\n{e}\n\n"
                 "Update your API key via Tools > st-fast-autocomplete > Set API Key."
             ))
         except RateLimitError as exc:
-            _ui(lambda: sublime.status_message(f"[fast_autocomplete] Rate limit: {exc}"))
+            _ui(lambda e=exc: sublime.status_message(f"[fast_autocomplete] Rate limit: {e}"))
         except ProviderTimeoutError:
             _ui(lambda: sublime.status_message("[fast_autocomplete] Request timed out."))
         except ProviderError as exc:
-            _ui(lambda: sublime.status_message(f"[fast_autocomplete] Error: {exc}"))
+            _ui(lambda e=exc: sublime.status_message(f"[fast_autocomplete] Error: {e}"))
 
     return task
 

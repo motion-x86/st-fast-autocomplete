@@ -4,33 +4,16 @@ Entry point for st-fast-autocomplete — AI-powered inline ghost text completion
 for Sublime Text 4. Supports Claude and OpenAI providers.
 """
 
-import sys
-import os
 import sublime
 import sublime_plugin
 
 # ---------------------------------------------------------------------------
-# ST4 import bootstrap
+# Absolute imports
 # ---------------------------------------------------------------------------
-# ST4 loads this file directly (not as part of a package), so relative imports
-# don't work. We inject the Packages directory into sys.path so that all
-# submodules are importable as absolute paths under the package folder name.
-
-def _bootstrap():
-    packages_path = sublime.packages_path()
-    if packages_path not in sys.path:
-        sys.path.insert(0, packages_path)
-
-    # Also ensure the vendor directory is importable
-    vendor_path = os.path.join(packages_path, "st_fast_autocomplete", "vendor")
-    if vendor_path not in sys.path:
-        sys.path.insert(0, vendor_path)
-
-_bootstrap()
-
-# ---------------------------------------------------------------------------
-# Absolute imports — safe after bootstrap
-# ---------------------------------------------------------------------------
+# ST4 loads plugins as sub-modules of a module named after the package,
+# e.g. st_fast_autocomplete.fast_autocomplete. The Packages/ directory is
+# on sys.path in the Python 3.8 host so absolute imports work directly.
+# The .python-version file in the package root ensures ST uses Python 3.8.
 from st_fast_autocomplete.plugin.settings import FastAutocompleteSettings
 from st_fast_autocomplete.plugin.completion_handler import CompletionHandler
 from st_fast_autocomplete.plugin.context_builder import ContextBuilder

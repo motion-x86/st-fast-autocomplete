@@ -31,7 +31,63 @@ def plugin_loaded() -> None:
     """Called by ST4 after the plugin is fully loaded."""
     FastAutocompleteSettings.load()
     KeychainManager.initialize()
+    _install_keybindings()
     print("[fast_autocomplete] Plugin loaded.")
+
+
+def _install_keybindings() -> None:
+    """
+    Install Tab/Escape/Ctrl+Shift+N bindings into the User package on first load.
+    This is necessary because ST evaluates keymaps alphabetically — 'Default'
+    package always sorts before any third-party package, so its unconditional
+    Tab → insert binding would always win. User keybindings have highest priority.
+    Existing User bindings are preserved; ours are prepended so they take priority.
+    Re-runs are idempotent — existing fast_autocomplete bindings are replaced.
+    """
+    import json
+    import os
+    import sys
+
+    platform = {"linux": "Linux", "darwin": "OSX", "win32": "Windows"}.get(sys.platform, "Linux")
+    user_keymap_path = os.path.join(
+        sublime.packages_path(), "User", f"Default ({platform}).sublime-keymap"
+    )
+
+    our_bindings = [
+        {
+            "keys": ["tab"],
+            "command": "fast_autocomplete_accept",
+            "context": [{"key": "fast_autocomplete_visible", "operator": "equal", "operand": True, "match_all": True}]
+        },
+        {
+            "keys": ["escape"],
+            "command": "fast_autocomplete_decline",
+            "context": [{"key": "fast_autocomplete_visible", "operator": "equal", "operand": True, "match_all": True}]
+        },
+        {
+            "keys": ["ctrl+shift+n"],
+            "command": "fast_autocomplete_next",
+            "context": [{"key": "fast_autocomplete_visible", "operator": "equal", "operand": True, "match_all": True}]
+        },
+    ]
+
+    existing = []
+    if os.path.exists(user_keymap_path):
+        try:
+            existing = sublime.decode_value(open(user_keymap_path).read())
+        except Exception:
+            existing = []
+
+    # Remove any stale fast_autocomplete bindings then prepend fresh ones
+    existing = [b for b in existing if not str(b.get("command", "")).startswith("fast_autocomplete_")]
+    merged = our_bindings + existing
+
+    os.makedirs(os.path.dirname(user_keymap_path), exist_ok=True)
+    with open(user_keymap_path, "w") as f:
+        f.write(sublime.encode_value(merged, pretty=True))
+
+    if FastAutocompleteSettings.debug():
+        print(f"[fast_autocomplete] Keybindings installed to {user_keymap_path}")
 
 
 def plugin_unloaded() -> None:

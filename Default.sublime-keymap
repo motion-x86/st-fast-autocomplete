@@ -9,41 +9,11 @@
         "context": [
             { "key": "setting.is_widget", "operator": "equal", "operand": false }
         ]
-    },
-
-    // -------------------------------------------------------------------------
-    // Accept the currently displayed ghost text completion
-    // Default: Tab  |  Only fires when ghost text is visible
-    // -------------------------------------------------------------------------
-    {
-        "keys": ["tab"],
-        "command": "fast_autocomplete_accept",
-        "context": [
-            { "key": "fast_autocomplete_visible", "operator": "equal", "operand": true }
-        ]
-    },
-
-    // -------------------------------------------------------------------------
-    // Dismiss / decline the current ghost text completion
-    // Default: Escape  |  Only fires when ghost text is visible
-    // -------------------------------------------------------------------------
-    {
-        "keys": ["escape"],
-        "command": "fast_autocomplete_decline",
-        "context": [
-            { "key": "fast_autocomplete_visible", "operator": "equal", "operand": true }
-        ]
-    },
-
-    // -------------------------------------------------------------------------
-    // Request an alternative completion (discards current ghost text, re-queries)
-    // Default: Ctrl+Shift+N  |  Only fires when ghost text is visible
-    // -------------------------------------------------------------------------
-    {
-        "keys": ["ctrl+shift+n"],
-        "command": "fast_autocomplete_next",
-        "context": [
-            { "key": "fast_autocomplete_visible", "operator": "equal", "operand": true }
-        ]
     }
+
+    // -------------------------------------------------------------------------
+    // Tab / Escape / Ctrl+Shift+N bindings are installed into the User package
+    // by install_keybindings.py so they take priority over ST's Default bindings.
+    // See README for manual keybinding instructions.
+    // -------------------------------------------------------------------------
 ]

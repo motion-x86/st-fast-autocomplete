@@ -142,6 +142,9 @@ class FastAutocompleteNextCommand(sublime_plugin.TextCommand):
     def is_enabled(self) -> bool:
         return CompletionHandler.has_pending(self.view) and not self.view.is_read_only()
 
+    def is_visible(self) -> bool:
+        return True
+
 
 class FastAutocompleteAcceptCommand(sublime_plugin.TextCommand):
     """
@@ -155,6 +158,9 @@ class FastAutocompleteAcceptCommand(sublime_plugin.TextCommand):
     def is_enabled(self) -> bool:
         return CompletionHandler.has_pending(self.view)
 
+    def is_visible(self) -> bool:
+        return True
+
 
 class FastAutocompleteDeclineCommand(sublime_plugin.TextCommand):
     """
@@ -167,6 +173,9 @@ class FastAutocompleteDeclineCommand(sublime_plugin.TextCommand):
 
     def is_enabled(self) -> bool:
         return CompletionHandler.has_pending(self.view)
+
+    def is_visible(self) -> bool:
+        return True
 
 
 class FastAutocompleteSetApiKeyCommand(sublime_plugin.ApplicationCommand):

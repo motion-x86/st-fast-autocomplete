@@ -35,8 +35,7 @@ PACKAGE_NAME = "st_fast_autocomplete"
 
 # Files and directories included in the package (relative to repo root)
 INCLUDE: list[str] = [
-    "sublime-package.json",
-    "python_version",
+    ".python-version",
     "fast_autocomplete.py",
     "fast_autocomplete.sublime-settings",
     "Default.sublime-keymap",
@@ -70,6 +69,12 @@ EXCLUDE_PATTERNS: list[str] = [
 # ---------------------------------------------------------------------------
 # Build
 # ---------------------------------------------------------------------------
+
+# ST4 build 4200 note: python_version file is only respected in newer ST4 builds.
+# For build 4200, the 3.8 plugin host only loads packages listed in the
+# package registry. The workaround is to symlink or copy the package into
+# the Lib/python38 directory so it's importable by the 3.8 host directly.
+# See README for full manual install instructions.
 
 def build(version: str | None, out_dir: Path, clean: bool) -> Path:
     repo_root = Path(__file__).parent.resolve()

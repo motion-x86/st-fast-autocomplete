@@ -31,13 +31,24 @@ python build.py --version 0.1.0 --clean
 #    zipped installs are for Package Control distribution only.
 
 # macOS
-cp -r dist/unpacked/st_fast_autocomplete ~/Library/Application\ Support/Sublime\ Text/Packages/
+cp -r dist/unpacked/st_fast_autocomplete/. \
+   ~/Library/Application\ Support/Sublime\ Text/Packages/st_fast_autocomplete/
 
 # Linux
-cp -r dist/unpacked/st_fast_autocomplete ~/.config/sublime-text/Packages/
+mkdir -p ~/.config/sublime-text/Packages/st_fast_autocomplete
+cp -r dist/unpacked/st_fast_autocomplete/. ~/.config/sublime-text/Packages/st_fast_autocomplete/
 
 # Windows (PowerShell)
-Copy-Item -Recurse dist\unpacked\st_fast_autocomplete "$env:APPDATA\Sublime Text\Packages\"
+Copy-Item -Recurse dist\unpacked\st_fast_autocomplete \
+   "$env:APPDATA\Sublime Text\Packages\"
+
+# IMPORTANT: verify the .python-version dotfile was copied
+# macOS/Linux:
+ls -la ~/.config/sublime-text/Packages/st_fast_autocomplete/.python-version
+# Should print: 3.8
+# If missing, copy it manually:
+# cp dist/unpacked/st_fast_autocomplete/.python-version \
+#    ~/.config/sublime-text/Packages/st_fast_autocomplete/
 
 # 3. Restart Sublime Text
 ```

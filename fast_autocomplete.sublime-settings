@@ -1,0 +1,169 @@
+// fast_autocomplete.sublime-settings
+// ---------------------------------------------------------------------------
+// Default settings for st-fast-autocomplete.
+// To override, open: Preferences > Package Settings > st-fast-autocomplete > Settings
+// Your User settings are merged on top of these defaults — only set what you
+// want to change.
+// ---------------------------------------------------------------------------
+{
+    // -------------------------------------------------------------------------
+    // Provider & Model
+    // -------------------------------------------------------------------------
+
+    // AI provider to use for completions.
+    // Accepted values: "claude" | "openai"
+    "provider": "claude",
+
+    // Model identifier. Must match the selected provider.
+    //
+    // Claude models:
+    //   "claude-sonnet-4-20250514"     — best quality, moderate speed (default)
+    //   "claude-haiku-4-5-20251001"    — fastest, lowest cost
+    //
+    // OpenAI models:
+    //   "gpt-4o"                       — best quality
+    //   "gpt-4o-mini"                  — faster, lower cost
+    "model": "claude-sonnet-4-20250514",
+
+    // -------------------------------------------------------------------------
+    // Completion Length
+    // -------------------------------------------------------------------------
+
+    // Maximum number of tokens the provider may return per completion.
+    //
+    // Guidelines:
+    //   1–64    → single expression or short statement
+    //   128     → default; fits most single-line completions  ← default
+    //   256     → short multi-line blocks
+    //   512     → functions / class methods
+    //   1024+   → large blocks (slower, costlier)
+    //
+    // The plugin enforces a hard ceiling of 4096 regardless of this value.
+    "max_completion_tokens": 128,
+
+    // -------------------------------------------------------------------------
+    // Context Window
+    // -------------------------------------------------------------------------
+
+    // Number of lines above the cursor included as prefix context.
+    "context_lines_before": 50,
+
+    // Number of lines below the cursor included as suffix context (fill-in-middle).
+    // Set to 0 to disable suffix context entirely.
+    "context_lines_after": 10,
+
+    // -------------------------------------------------------------------------
+    // Streaming
+    // -------------------------------------------------------------------------
+
+    // Stream tokens as they arrive (true) or wait for the full response (false).
+    "streaming": false,
+
+    // -------------------------------------------------------------------------
+    // Prompts
+    // -------------------------------------------------------------------------
+    // Three prompt fields control what is sent to the AI provider.
+    // All fields support being set to "" to fall back to the built-in default.
+    // Run command palette → "FastAutocomplete: Reset Prompts to Default"
+    // to erase any User overrides and restore all three fields at once.
+    //
+    // PLACEHOLDERS (completion_instruction and alternate_instruction only):
+    //   {language}         — human-readable language name, e.g. "Python"
+    //   {file_name}        — basename of the open file, e.g. "main.py"
+    //                        empty string when the buffer has no file path
+    //   {file_name_clause} — natural sentence fragment: " in file main.py"
+    //                        or empty string when file_name is unknown.
+    //                        Use inside sentences, e.g. "Complete {language} code{file_name_clause}."
+    //
+    // NOTE: system_prompt does NOT support placeholders — it is static context
+    // sent once per request as the system role message.
+
+    // Sent as the system role message. Sets the assistant's persona and
+    // output constraints. Keep this concise — it is included in every request.
+    "system_prompt": "You are an expert code completion engine embedded in a code editor. You receive a code prefix and optional suffix, and your sole task is to produce the text that belongs at the cursor position. Output ONLY the raw completion text — no explanation, no markdown, no code fences, no commentary of any kind.",
+
+    // Appended after the prefix/suffix block for a normal completion.
+    // Supports placeholders: {language}, {file_name}, {file_name_clause}
+    "completion_instruction": "Complete the code at the cursor position for {language}.{file_name_clause} Output ONLY the completion text with no explanation, no markdown, and no surrounding code fences.",
+
+    // Appended after the prefix/suffix block when requesting an alternative
+    // completion (Ctrl+Shift+N). Higher temperature is also applied automatically.
+    // Supports placeholders: {language}, {file_name}, {file_name_clause}
+    "alternate_instruction": "Provide an alternative completion for {language} that differs from the most obvious approach.{file_name_clause} Output ONLY the completion text with no explanation, no markdown, and no surrounding code fences.",
+
+    // -------------------------------------------------------------------------
+    // Ghost Text Appearance
+    // -------------------------------------------------------------------------
+
+    // Scope used to style the ghost text phantom.
+    // Common choices: "comment", "string", "region.bluish"
+    "ghost_text_scope": "comment",
+
+    // -------------------------------------------------------------------------
+    // Request Behaviour
+    // -------------------------------------------------------------------------
+
+    // Timeout in seconds for a completion request.
+    "request_timeout_seconds": 10,
+
+    // Number of times to retry a failed request (transient errors only).
+    "max_retries": 2,
+
+    // -------------------------------------------------------------------------
+    // LSP Compatibility
+    // -------------------------------------------------------------------------
+
+    // Suppress ghost text while an LSP completion popup is open.
+    "lsp_coexistence": true,
+
+    // -------------------------------------------------------------------------
+    // Privacy
+    // -------------------------------------------------------------------------
+    // Controls what is stripped from your code before it is sent to the API.
+    // All redaction happens locally in the editor — nothing is logged.
+    // Each option is independent; enable only what you need.
+
+    // Remove comments from the context before sending.
+    // Supported for most common languages (Python, JS/TS, Go, Rust, C/C++,
+    // Java, SQL, HTML, CSS, YAML, and more). Unknown languages use a
+    // best-effort generic stripper.
+    "privacy_redact_comments": false,
+
+    // Replace the contents of string literals with an empty placeholder ("")
+    // before sending. String delimiters are preserved so the model still
+    // understands code structure.
+    "privacy_redact_string_literals": false,
+
+    // Request that the provider does not use this request for model training.
+    //
+    // Claude  → sends "anthropic-beta: no-train-1" request header.
+    //           Requires an Anthropic API account with data retention controls.
+    // OpenAI  → sends "OpenAI-Data-Retention: none" request header.
+    //           Only honoured on enterprise accounts with ZDR enabled.
+    //           Has no effect on standard API accounts.
+    "privacy_no_retention": true,
+
+    // User-defined redaction rules applied to prefix and suffix context.
+    // Each entry is either:
+    //   - a plain string (literal match, replaced with "[REDACTED]")
+    //   - an object with keys:
+    //       "pattern"     : regex string (required)
+    //       "replacement" : string to substitute (default: "[REDACTED]")
+    //       "flags"       : array of flag names — "IGNORECASE", "MULTILINE", "DOTALL"
+    //
+    // Examples:
+    //   "privacy_redact_patterns": [
+    //     "my_secret_token",
+    //     { "pattern": "sk-[A-Za-z0-9]{32,}", "replacement": "[API_KEY]" },
+    //     { "pattern": "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "replacement": "[CARD]" }
+    //   ]
+    "privacy_redact_patterns": [],
+
+    // -------------------------------------------------------------------------
+    // Debug
+    // -------------------------------------------------------------------------
+
+    // Print verbose request/response details to the Sublime Text console.
+    // Open console: View > Show Console  (or Ctrl+`)
+    "debug": false
+}

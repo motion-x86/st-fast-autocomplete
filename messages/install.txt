@@ -1,0 +1,50 @@
+st-fast-autocomplete
+====================
+AI-powered inline ghost text autocomplete for Sublime Text 4.
+Supports Claude (Anthropic) and OpenAI.
+
+QUICK START
+-----------
+1. Set your API key
+   Tools > st-fast-autocomplete > Set API Key > Claude (Anthropic)
+   Tools > st-fast-autocomplete > Set API Key > OpenAI
+
+   Keys are stored securely in your OS keychain — never written to disk.
+
+2. Select your provider (default: Claude)
+   Tools > st-fast-autocomplete > Select Provider
+
+3. Trigger your first completion
+   Position your cursor and press Ctrl+Space (Cmd+Space on macOS)
+   - Tab      → accept
+   - Escape   → dismiss
+   - Ctrl+Shift+N → request an alternative completion
+
+SETTINGS
+--------
+Preferences > Package Settings > st-fast-autocomplete > Settings – User
+
+Key options:
+  "provider"               — "claude" or "openai"
+  "model"                  — model identifier for the selected provider
+  "max_completion_tokens"  — cap completion length (default: 128)
+  "streaming"              — stream tokens as they arrive (default: false)
+  "context_lines_before"   — lines of prefix context sent to the API (default: 50)
+  "context_lines_after"    — lines of suffix context sent to the API (default: 10)
+
+KEYBINDINGS
+-----------
+All bindings are overridable in Preferences > Key Bindings (User).
+
+  Ctrl+Space      → trigger completion
+  Tab             → accept ghost text
+  Escape          → dismiss ghost text
+  Ctrl+Shift+N    → request alternative completion
+
+DOCUMENTATION
+-------------
+https://github.com/your-org/st-fast-autocomplete
+
+ISSUES & FEEDBACK
+-----------------
+https://github.com/your-org/st-fast-autocomplete/issues

@@ -1,13 +1,6 @@
 """
 plugin/completion_handler.py
 Ghost text rendering, accept/dismiss, and streaming update logic.
-
-Ghost text is rendered using ST4's minihtml phantom API:
-  view.add_phantom() inserts a read-only styled overlay after the cursor.
-
-State is tracked per view.id() so multiple open files are fully isolated.
-All UI mutations (add/erase phantoms, insert text) are marshalled back to
-the UI thread via sublime.set_timeout().
 """
 
 from __future__ import annotations
@@ -27,13 +20,11 @@ from st_fast_autocomplete.plugin.settings import FastAutocompleteSettings
 # ---------------------------------------------------------------------------
 
 class _ViewState:
-    """Holds the current ghost text state for a single view."""
-
     def __init__(self) -> None:
-        self.completion_text: str          = ""
-        self.cursor_point:    int          = -1
+        self.completion_text: str                      = ""
+        self.cursor_point:    int                      = -1
         self.phantom_set:     Optional[sublime.PhantomSet] = None
-        self.lock:            threading.Lock = threading.Lock()
+        self.lock:            threading.Lock           = threading.Lock()
 
     def clear(self) -> None:
         with self.lock:
@@ -41,11 +32,8 @@ class _ViewState:
             self.cursor_point    = -1
 
 
-# view.id() → _ViewState
 _states: dict[int, _ViewState] = {}
 _states_lock = threading.Lock()
-
-# ST phantom key — used to identify/erase our phantoms
 _PHANTOM_KEY = "fast_autocomplete_ghost"
 
 
@@ -58,7 +46,7 @@ def _get_state(view: sublime.View) -> _ViewState:
 
 
 # ---------------------------------------------------------------------------
-# Public API (called from fast_autocomplete.py commands + event listener)
+# Public API
 # ---------------------------------------------------------------------------
 
 class CompletionHandler:
@@ -73,41 +61,30 @@ class CompletionHandler:
         max_tokens: int,
         alternate: bool = False,
     ) -> None:
-        """
-        Dispatch an async completion request for view.
-        Any previously in-flight request for this view is cancelled first.
-        """
         state = _get_state(view)
         with state.lock:
             state.cursor_point = cursor_point
-
         sublime.status_message("[fast_autocomplete] Requesting completion…")
-
         if streaming:
             task = _make_stream_task(view, context, provider, max_tokens, alternate)
         else:
             task = _make_full_task(view, context, provider, max_tokens, alternate)
-
         debounce.dispatch(view, task)
 
     @staticmethod
     def accept(view: sublime.View, edit: sublime.Edit) -> None:
-        """Insert the ghost text at the cursor and clear the phantom."""
         state = _get_state(view)
         with state.lock:
             text  = state.completion_text
             point = state.cursor_point
-
         if not text or point < 0:
             return
-
         view.insert(edit, point, text)
         CompletionHandler.dismiss(view)
         sublime.status_message("[fast_autocomplete] Completion accepted.")
 
     @staticmethod
     def dismiss(view: sublime.View) -> None:
-        """Erase the ghost text phantom without inserting anything."""
         state = _get_state(view)
         state.clear()
         debounce.cancel(view)
@@ -116,24 +93,20 @@ class CompletionHandler:
 
     @staticmethod
     def cancel(view: sublime.View) -> None:
-        """Cancel any in-flight request without clearing existing ghost text."""
         debounce.cancel(view)
 
     @staticmethod
     def cancel_all() -> None:
-        """Cancel all requests across all views (plugin_unloaded)."""
         debounce.cancel_all()
 
     @staticmethod
     def has_pending(view: sublime.View) -> bool:
-        """Return True if ghost text is currently displayed in this view."""
         state = _get_state(view)
         with state.lock:
             return bool(state.completion_text)
 
     @staticmethod
     def cursor_at_completion_point(view: sublime.View) -> bool:
-        """Return True if the cursor is still at the original completion point."""
         state = _get_state(view)
         with state.lock:
             expected = state.cursor_point
@@ -144,7 +117,7 @@ class CompletionHandler:
 
 
 # ---------------------------------------------------------------------------
-# Task factories — return callables for debounce.dispatch()
+# Task factories
 # ---------------------------------------------------------------------------
 
 def _make_full_task(
@@ -154,27 +127,31 @@ def _make_full_task(
     max_tokens: int,
     alternate: bool,
 ):
-    """Returns a background task for a non-streaming completion."""
-
     def task(token: debounce.RequestToken) -> None:
         if token.is_cancelled:
             return
+
+        text = None
+        err_msg = None
+        is_auth_err = False
+
         try:
             text = provider.complete(context, max_tokens, alternate)
         except AuthError as exc:
-            _ui(lambda e=exc: sublime.error_message(
-                f"[fast_autocomplete] Authentication failed:\n{e}\n\n"
+            err_msg = (
+                f"[fast_autocomplete] Authentication failed:\n{exc}\n\n"
                 "Update your API key via Tools > st-fast-autocomplete > Set API Key."
-            ))
-            return
+            )
+            is_auth_err = True
         except RateLimitError as exc:
-            _ui(lambda e=exc: sublime.status_message(f"[fast_autocomplete] Rate limit: {e}"))
-            return
+            err_msg = f"[fast_autocomplete] Rate limit: {exc}"
         except ProviderTimeoutError:
-            _ui(lambda: sublime.status_message("[fast_autocomplete] Request timed out."))
-            return
+            err_msg = "[fast_autocomplete] Request timed out."
         except ProviderError as exc:
-            _ui(lambda e=exc: sublime.status_message(f"[fast_autocomplete] Error: {e}"))
+            err_msg = f"[fast_autocomplete] Error: {exc}"
+
+        if err_msg is not None:
+            _show_error(err_msg, is_auth_err)
             return
 
         if token.is_cancelled or not text:
@@ -192,62 +169,55 @@ def _make_stream_task(
     max_tokens: int,
     alternate: bool,
 ):
-    """Returns a background task for a streaming completion."""
-
     def task(token: debounce.RequestToken) -> None:
         if token.is_cancelled:
             return
 
         accumulated = ""
+        err_msg = None
+        is_auth_err = False
 
         try:
             for chunk in provider.complete_stream(context, max_tokens, alternate):
                 if token.is_cancelled:
                     return
                 accumulated += chunk
-                # Capture current value for the lambda closure
                 _snapshot = accumulated
                 _ui(lambda s=_snapshot: _show_ghost_text(view, s))
-
         except AuthError as exc:
-            _ui(lambda e=exc: sublime.error_message(
-                f"[fast_autocomplete] Authentication failed:\n{e}\n\n"
+            err_msg = (
+                f"[fast_autocomplete] Authentication failed:\n{exc}\n\n"
                 "Update your API key via Tools > st-fast-autocomplete > Set API Key."
-            ))
+            )
+            is_auth_err = True
         except RateLimitError as exc:
-            _ui(lambda e=exc: sublime.status_message(f"[fast_autocomplete] Rate limit: {e}"))
+            err_msg = f"[fast_autocomplete] Rate limit: {exc}"
         except ProviderTimeoutError:
-            _ui(lambda: sublime.status_message("[fast_autocomplete] Request timed out."))
+            err_msg = "[fast_autocomplete] Request timed out."
         except ProviderError as exc:
-            _ui(lambda e=exc: sublime.status_message(f"[fast_autocomplete] Error: {e}"))
+            err_msg = f"[fast_autocomplete] Error: {exc}"
+
+        if err_msg is not None:
+            _show_error(err_msg, is_auth_err)
 
     return task
 
 
 # ---------------------------------------------------------------------------
-# Ghost text rendering (must run on UI thread)
+# Ghost text rendering
 # ---------------------------------------------------------------------------
 
 def _show_ghost_text(view: sublime.View, text: str) -> None:
-    """
-    Render text as a minihtml phantom immediately after the cursor.
-    Updates the per-view state so accept() can insert the correct text.
-    """
     if not text:
         return
-
     state = _get_state(view)
     with state.lock:
         cursor_point = state.cursor_point
         state.completion_text = text
-
     if cursor_point < 0:
         return
-
     scope   = FastAutocompleteSettings.ghost_text_scope()
     escaped = _html_escape(text)
-
-    # Style ghost text to look like a "comment" — dimmed, italicised
     html = (
         f'<body id="fast_autocomplete_ghost">'
         f'<span class="{scope}" style="font-style: italic; opacity: 0.55;">'
@@ -255,7 +225,6 @@ def _show_ghost_text(view: sublime.View, text: str) -> None:
         f'</span>'
         f'</body>'
     )
-
     phantom_set = _get_phantom_set(view)
     phantom_set.update([
         sublime.Phantom(
@@ -264,18 +233,16 @@ def _show_ghost_text(view: sublime.View, text: str) -> None:
             layout=sublime.LAYOUT_INLINE,
         )
     ])
-
-    sublime.status_message("[fast_autocomplete] Tab to accept · Escape to dismiss · Ctrl+Shift+N for alternative")
+    sublime.status_message(
+        "[fast_autocomplete] Tab to accept · Escape to dismiss · Ctrl+Shift+N for alternative"
+    )
 
 
 def _erase_phantom(view: sublime.View) -> None:
-    """Remove the ghost text phantom from the view."""
-    phantom_set = _get_phantom_set(view)
-    phantom_set.update([])
+    _get_phantom_set(view).update([])
 
 
 def _get_phantom_set(view: sublime.View) -> sublime.PhantomSet:
-    """Return (or lazily create) the PhantomSet for this view."""
     state = _get_state(view)
     with state.lock:
         if state.phantom_set is None:
@@ -288,12 +255,23 @@ def _get_phantom_set(view: sublime.View) -> sublime.PhantomSet:
 # ---------------------------------------------------------------------------
 
 def _ui(fn) -> None:
-    """Marshal a callable back to the ST UI thread."""
+    """Marshal a callable to the ST UI thread."""
     sublime.set_timeout(fn, 0)
 
 
+def _show_error(message: str, is_error: bool = False) -> None:
+    """
+    Show an error or status message on the UI thread.
+    message is captured as a local variable before set_timeout is called —
+    no lambdas, no closures, no exc scope issues.
+    """
+    if is_error:
+        sublime.set_timeout(lambda: sublime.error_message(message), 0)
+    else:
+        sublime.set_timeout(lambda: sublime.status_message(message), 0)
+
+
 def _html_escape(text: str) -> str:
-    """Minimal HTML escaping for phantom content."""
     return (
         text
         .replace("&", "&amp;")

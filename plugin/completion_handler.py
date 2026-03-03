@@ -24,6 +24,7 @@ class _ViewState:
         self.completion_text: str                      = ""
         self.cursor_point:    int                      = -1
         self.phantom_set:     Optional[sublime.PhantomSet] = None
+        self.rendering:       bool                     = False
         self.lock:            threading.Lock           = threading.Lock()
 
     def clear(self) -> None:
@@ -103,7 +104,14 @@ class CompletionHandler:
     def has_pending(view: sublime.View) -> bool:
         state = _get_state(view)
         with state.lock:
-            return bool(state.completion_text)
+            return bool(state.completion_text) or state.rendering
+
+    @staticmethod
+    def is_rendering(view: sublime.View) -> bool:
+        """True while a phantom is being inserted — suppress event-driven dismissal."""
+        state = _get_state(view)
+        with state.lock:
+            return state.rendering
 
     @staticmethod
     def cursor_at_completion_point(view: sublime.View) -> bool:
@@ -225,6 +233,9 @@ def _show_ghost_text(view: sublime.View, text: str) -> None:
         f'</span>'
         f'</body>'
     )
+    state = _get_state(view)
+    with state.lock:
+        state.rendering = True
     phantom_set = _get_phantom_set(view)
     phantom_set.update([
         sublime.Phantom(
@@ -233,6 +244,8 @@ def _show_ghost_text(view: sublime.View, text: str) -> None:
             layout=sublime.LAYOUT_INLINE,
         )
     ])
+    with state.lock:
+        state.rendering = False
     sublime.status_message(
         "[fast_autocomplete] Tab to accept · Escape to dismiss · Ctrl+Shift+N for alternative"
     )

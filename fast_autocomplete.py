@@ -4,6 +4,8 @@ Entry point for st-fast-autocomplete — AI-powered inline ghost text completion
 for Sublime Text 4. Supports Claude and OpenAI providers.
 """
 
+from __future__ import annotations
+
 import sublime
 import sublime_plugin
 
@@ -257,11 +259,15 @@ class FastAutocompleteEventListener(sublime_plugin.EventListener):
 
     def on_modified(self, view: sublime.View) -> None:
         """Clear pending ghost text if the user types anything."""
+        if CompletionHandler.is_rendering(view):
+            return  # phantom insertion triggers on_modified — ignore it
         if CompletionHandler.has_pending(view):
             CompletionHandler.dismiss(view)
 
     def on_selection_modified(self, view: sublime.View) -> None:
         """Clear ghost text if cursor moves away from completion point."""
+        if CompletionHandler.is_rendering(view):
+            return  # phantom insertion may shift selection — ignore it
         if CompletionHandler.has_pending(view):
             if not CompletionHandler.cursor_at_completion_point(view):
                 CompletionHandler.dismiss(view)
@@ -269,3 +275,24 @@ class FastAutocompleteEventListener(sublime_plugin.EventListener):
     def on_activated(self, view: sublime.View) -> None:
         """Cancel any in-flight request when switching views."""
         CompletionHandler.cancel(view)
+
+    def on_query_context(
+        self,
+        view: sublime.View,
+        key: str,
+        operator: str,
+        operand: object,
+        match_all: bool,
+    ) -> bool | None:
+        """
+        Resolve the fast_autocomplete_visible context key used in keybindings.
+        Returns True/False when key matches, None to pass through to ST.
+        """
+        if key != "fast_autocomplete_visible":
+            return None
+        is_visible = CompletionHandler.has_pending(view)
+        if operator == "equal":
+            return is_visible == operand
+        if operator == "not_equal":
+            return is_visible != operand
+        return None

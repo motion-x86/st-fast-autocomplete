@@ -336,19 +336,21 @@ class FastAutocompleteEventListener(sublime_plugin.EventListener):
         self,
         view: sublime.View,
         key: str,
-        operator: str,
+        operator: int,
         operand: object,
         match_all: bool,
     ) -> bool | None:
         """
         Resolve the fast_autocomplete_visible context key used in keybindings.
+        ST passes operator as an integer constant, not a string.
         Returns True/False when key matches, None to pass through to ST.
         """
         if key != "fast_autocomplete_visible":
             return None
         is_visible = CompletionHandler.has_pending(view)
-        if operator == "equal":
+        # sublime.OP_EQUAL = 0, sublime.OP_NOT_EQUAL = 1
+        if operator == sublime.OP_EQUAL:
             return is_visible == operand
-        if operator == "not_equal":
+        if operator == sublime.OP_NOT_EQUAL:
             return is_visible != operand
         return None

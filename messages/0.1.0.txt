@@ -1,0 +1,14 @@
+st-fast-autocomplete 0.1.0
+==========================
+Initial release.
+
+- Inline ghost text completions via Claude (Anthropic) and OpenAI
+- Manual trigger with Ctrl+Space, accept with Tab, dismiss with Escape
+- Ctrl+Shift+N to request an alternative completion
+- Streaming support (optional, configurable)
+- OS keychain storage for API keys (macOS Keychain, Linux Secret Service,
+  Windows Credential Manager)
+- Configurable context window (prefix + suffix lines)
+- Bounded completion length via max_completion_tokens (default: 128)
+- LSP coexistence mode
+- ST4 / Python 3.8+ only

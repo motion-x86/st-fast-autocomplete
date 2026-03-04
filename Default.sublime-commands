@@ -1,0 +1,40 @@
+[
+    {
+        "caption": "FastAutocomplete: Trigger Completion",
+        "command": "fast_autocomplete_trigger"
+    },
+    {
+        "caption": "FastAutocomplete: Accept Completion",
+        "command": "fast_autocomplete_accept"
+    },
+    {
+        "caption": "FastAutocomplete: Dismiss Completion",
+        "command": "fast_autocomplete_decline"
+    },
+    {
+        "caption": "FastAutocomplete: Next Completion (Alternative)",
+        "command": "fast_autocomplete_next"
+    },
+    {
+        "caption": "FastAutocomplete: Set API Key (Claude)",
+        "command": "fast_autocomplete_set_api_key",
+        "args": { "provider": "claude" }
+    },
+    {
+        "caption": "FastAutocomplete: Set API Key (OpenAI)",
+        "command": "fast_autocomplete_set_api_key",
+        "args": { "provider": "openai" }
+    },
+    {
+        "caption": "FastAutocomplete: Select Provider",
+        "command": "fast_autocomplete_select_provider"
+    },
+    {
+        "caption": "FastAutocomplete: Toggle Streaming",
+        "command": "fast_autocomplete_toggle_streaming"
+    },
+    {
+        "caption": "FastAutocomplete: Reset Prompts to Default",
+        "command": "fast_autocomplete_reset_prompts"
+    }
+]

@@ -1,0 +1,106 @@
+# .github/workflows/release.yml
+# ---------------------------------------------------------------------------
+# Triggered on version tags (e.g. v1.0.0 or v0.1.0).
+# Builds st-fast-autocomplete.sublime-package and publishes a GitHub Release
+# with the package as a downloadable asset.
+#
+# Required repository secrets: none (uses the default GITHUB_TOKEN).
+#
+# Tag format: v<semver>  e.g.  git tag v1.0.0 && git push origin v1.0.0
+# ---------------------------------------------------------------------------
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write   # needed to create releases and upload assets
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so messages/ changelog is accessible
+
+      # -----------------------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # -----------------------------------------------------------------------
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Strip leading 'v' from the tag name
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------------
+      - name: Build .sublime-package
+        run: |
+          python build.py \
+            --version "${{ steps.version.outputs.version }}" \
+            --out dist \
+            --clean
+
+      # -----------------------------------------------------------------------
+      - name: Verify package was created
+        run: |
+          PKG="dist/st_fast_autocomplete-${{ steps.version.outputs.version }}.sublime-package"
+          if [ ! -f "$PKG" ]; then
+            echo "ERROR: expected package not found: $PKG"
+            exit 1
+          fi
+          echo "Package size: $(du -sh "$PKG" | cut -f1)"
+
+      # -----------------------------------------------------------------------
+      - name: Read release notes from messages/
+        id: release_notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          NOTES_FILE="messages/${VERSION}.txt"
+          if [ -f "$NOTES_FILE" ]; then
+            # Escape newlines for GitHub Actions output
+            NOTES=$(cat "$NOTES_FILE")
+          else
+            NOTES="Release ${VERSION}."
+          fi
+          # Write to a temp file to avoid quoting issues
+          echo "$NOTES" > /tmp/release_notes.txt
+
+      # -----------------------------------------------------------------------
+      - name: Create GitHub Release and upload asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "st-fast-autocomplete ${{ steps.version.outputs.version }}"
+          body_path: /tmp/release_notes.txt
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          files: |
+            dist/st_fast_autocomplete-${{ steps.version.outputs.version }}.sublime-package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # Also publish an unversioned copy so Package Control can find it
+      # at a stable URL: .../releases/latest/download/st-fast-autocomplete.sublime-package
+      - name: Upload unversioned asset to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          files: dist/st_fast_autocomplete-${{ steps.version.outputs.version }}.sublime-package
+          name: "st-fast-autocomplete ${{ steps.version.outputs.version }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

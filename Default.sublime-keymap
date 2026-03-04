@@ -1,0 +1,30 @@
+[
+    {
+        "keys": ["ctrl+space"],
+        "command": "fast_autocomplete_trigger",
+        "context": [
+            { "key": "setting.is_widget", "operator": "equal", "operand": false }
+        ]
+    },
+    {
+        "keys": ["tab"],
+        "command": "fast_autocomplete_accept",
+        "context": [
+            { "key": "fast_autocomplete_visible", "operator": "equal", "operand": true }
+        ]
+    },
+    {
+        "keys": ["escape"],
+        "command": "fast_autocomplete_decline",
+        "context": [
+            { "key": "fast_autocomplete_visible", "operator": "equal", "operand": true }
+        ]
+    },
+    {
+        "keys": ["ctrl+shift+n"],
+        "command": "fast_autocomplete_next",
+        "context": [
+            { "key": "fast_autocomplete_visible", "operator": "equal", "operand": true }
+        ]
+    }
+]

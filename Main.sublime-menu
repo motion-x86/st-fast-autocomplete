@@ -1,0 +1,131 @@
+[
+    {
+        "caption": "Preferences",
+        "mnemonic": "n",
+        "id": "preferences",
+        "children":
+        [
+            {
+                "caption": "Package Settings",
+                "mnemonic": "P",
+                "id": "package-settings",
+                "children":
+                [
+                    {
+                        "caption": "st-fast-autocomplete",
+                        "children":
+                        [
+                            {
+                                "caption": "Settings",
+                                "command": "edit_settings",
+                                "args": {
+                                    "base_file": "${packages}/st_fast_autocomplete/fast_autocomplete.sublime-settings",
+                                    "default": "// Place your st-fast-autocomplete settings here.\n{\n\t$0\n}\n"
+                                }
+                            },
+                            { "caption": "-" },
+                            {
+                                "caption": "Key Bindings – Default",
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/st_fast_autocomplete/Default.sublime-keymap"
+                                }
+                            },
+                            {
+                                "caption": "Key Bindings – User",
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/User/Default.sublime-keymap"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "caption": "Tools",
+        "mnemonic": "T",
+        "id": "tools",
+        "children":
+        [
+            {
+                "caption": "st-fast-autocomplete",
+                "id": "fast-autocomplete",
+                "children":
+                [
+                    // ---------------------------------------------------------
+                    // Completions
+                    // ---------------------------------------------------------
+                    {
+                        "caption": "Trigger Completion",
+                        "command": "fast_autocomplete_trigger",
+                        "mnemonic": "T"
+                    },
+                    {
+                        "caption": "Accept Completion",
+                        "command": "fast_autocomplete_accept",
+                        "mnemonic": "A"
+                    },
+                    {
+                        "caption": "Next Completion",
+                        "command": "fast_autocomplete_next",
+                        "mnemonic": "N"
+                    },
+                    {
+                        "caption": "Dismiss Completion",
+                        "command": "fast_autocomplete_decline",
+                        "mnemonic": "D"
+                    },
+                    { "caption": "-" },
+
+                    // ---------------------------------------------------------
+                    // Provider
+                    // ---------------------------------------------------------
+                    {
+                        "caption": "Select Provider…",
+                        "command": "fast_autocomplete_select_provider",
+                        "mnemonic": "P"
+                    },
+                    {
+                        "caption": "Toggle Streaming",
+                        "command": "fast_autocomplete_toggle_streaming",
+                        "mnemonic": "S"
+                    },
+                    { "caption": "-" },
+
+                    // ---------------------------------------------------------
+                    // Prompts
+                    // ---------------------------------------------------------
+                    {
+                        "caption": "Reset Prompts to Default",
+                        "command": "fast_autocomplete_reset_prompts",
+                        "mnemonic": "R"
+                    },
+                    { "caption": "-" },
+
+                    // ---------------------------------------------------------
+                    // API Keys
+                    // ---------------------------------------------------------
+                    {
+                        "caption": "Set API Key",
+                        "children":
+                        [
+                            {
+                                "caption": "Claude (Anthropic)",
+                                "command": "fast_autocomplete_set_api_key",
+                                "args": { "provider": "claude" }
+                            },
+                            {
+                                "caption": "OpenAI",
+                                "command": "fast_autocomplete_set_api_key",
+                                "args": { "provider": "openai" }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

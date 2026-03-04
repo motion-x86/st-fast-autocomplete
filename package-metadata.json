@@ -1,0 +1,23 @@
+{
+    "sublime_text": ">=4107",
+    "platforms": ["*"],
+    "python_version": "3.8",
+    "url": "https://github.com/motion-x86/st-fast-autocomplete",
+    "description": "Lightweight AI-powered inline ghost text autocomplete. Supports Claude (Anthropic) and OpenAI.",
+    "author": "motion-x86",
+    "license": "MIT",
+    "homepage": "https://github.com/motion-x86/st-fast-autocomplete",
+    "issues": "https://github.com/motion-x86/st-fast-autocomplete/issues",
+    "donate": "",
+    "buy": "",
+    "readme": "https://raw.githubusercontent.com/motion-x86/st-fast-autocomplete/main/README.md",
+    "releases": [
+        {
+            "sublime_text": ">=4107",
+            "platforms": ["*"],
+            "python_version": "3.8",
+            "tags": true,
+            "asset": "st_fast_autocomplete.sublime-package"
+        }
+    ]
+}

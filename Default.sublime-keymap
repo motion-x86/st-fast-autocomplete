@@ -1,19 +1,30 @@
 [
-    // -------------------------------------------------------------------------
-    // Trigger a new AI completion at the cursor position
-    // Default: Ctrl+Space  |  Override in your User keybindings
-    // -------------------------------------------------------------------------
     {
         "keys": ["ctrl+space"],
         "command": "fast_autocomplete_trigger",
         "context": [
             { "key": "setting.is_widget", "operator": "equal", "operand": false }
         ]
+    },
+    {
+        "keys": ["tab"],
+        "command": "fast_autocomplete_accept",
+        "context": [
+            { "key": "fast_autocomplete_visible", "operator": "equal", "operand": true }
+        ]
+    },
+    {
+        "keys": ["escape"],
+        "command": "fast_autocomplete_decline",
+        "context": [
+            { "key": "fast_autocomplete_visible", "operator": "equal", "operand": true }
+        ]
+    },
+    {
+        "keys": ["ctrl+shift+n"],
+        "command": "fast_autocomplete_next",
+        "context": [
+            { "key": "fast_autocomplete_visible", "operator": "equal", "operand": true }
+        ]
     }
-
-    // -------------------------------------------------------------------------
-    // Tab / Escape / Ctrl+Shift+N bindings are installed into the User package
-    // by install_keybindings.py so they take priority over ST's Default bindings.
-    // See README for manual keybinding instructions.
-    // -------------------------------------------------------------------------
 ]
